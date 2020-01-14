@@ -1,16 +1,15 @@
 ﻿#region License
 //Данный код опубликован под лицензией Creative Commons Attribution-NonCommercial-ShareAlike.
-//Разрешено редактировать, изменять и брать данный код за основу для производных в некоммерческих целях,
+//Разрешено использовать, распространять, изменять и брать данный код за основу для производных в некоммерческих целях,
 //при условии указания авторства и если производные лицензируются на тех же условиях.
-//Программа поставляется "как есть". Автор не несет ответственности за возможные последствия её использования.
+//Код поставляется "как есть". Автор не несет ответственности за возможные последствия использования.
 //Зуев Александр, 2019, все права защищены.
 //This code is listed under the Creative Commons Attribution-NonCommercial-ShareAlike license.
-//You may redistribute, remix, tweak, and build upon this work non-commercially, 
+//You may use, redistribute, remix, tweak, and build upon this work non-commercially, 
 //as long as you credit the author by linking back and license your new creations under the same terms.
 //This code is provided 'as is'. Author disclaims any implied warranty. 
 //Zuev Aleksandr, 2019, all rigths reserved.
 #endregion
-
 #region Usings
 using System;
 using System.Collections.Generic;
@@ -32,6 +31,7 @@ namespace AreaRebarMark
         {
             double offset = 0; //мм
 
+            //собираю все элементы армирования по площади и траектории
             Document doc = commandData.Application.ActiveUIDocument.Document;
             FilteredElementCollector areas = new FilteredElementCollector(doc)
                 .OfClass(typeof(Autodesk.Revit.DB.Structure.AreaReinforcement))
@@ -44,8 +44,10 @@ namespace AreaRebarMark
             using (Transaction t = new Transaction(doc))
             {
                 t.Start("Area rebar mark");
+                //и Path, и Area попытаюсь обрабатываю в одном цикле, чтобы компактнее было
                 foreach (Element rebarAreaPath in col)
                 {
+                    //благодаря hashset можно собрать только уникальный марки стержней
                     HashSet<string> marks = new HashSet<string>();
                     string rebarSystemMark = "";
 
@@ -61,7 +63,7 @@ namespace AreaRebarMark
                         rebarIds = ar.GetRebarInSystemIds().ToList();
                         curveIds = ar.GetBoundaryCurveIds().ToList();
 
-                        //вычисляю отметки верха и низа
+                        //определяю нижнюю и верзнюю точку зоны
                         List<double> zs = new List<double>();
                         foreach (ElementId curveId in curveIds)
                         {
@@ -92,6 +94,7 @@ namespace AreaRebarMark
                         minZ = pr.get_BoundingBox(doc.ActiveView).Min.Z;
                     }
 
+                    //получаю общие параметры, в которые буду записывать отметку верха и низа, они должны быть заранее добавлены
                     Parameter topelev = rebarAreaPath.LookupParameter("АрмПлощ.ОтмВерха");
                     Parameter botelev = rebarAreaPath.LookupParameter("АрмПлощ.ОтмНиза");
 
@@ -110,14 +113,21 @@ namespace AreaRebarMark
                         botelev.Set(minZ);
                     }
 
+                    //еще хочу записать в зону длину самого длинного арматурного стержня в ней
                     double length = 0;
+                    
+                    //обрабатываю арматурные стержни в составе зоны 
                     foreach (ElementId rebarId in rebarIds)
                     {
                         Element rebar = doc.GetElement(rebarId);
                         string rebarMark = rebar.get_Parameter(BuiltInParameter.ALL_MODEL_MARK).AsString();
                         marks.Add(rebarMark);
-                        length = rebar.get_Parameter(BuiltInParameter.REBAR_ELEM_LENGTH).AsDouble();
+                        double tempLength = rebar.get_Parameter(BuiltInParameter.REBAR_ELEM_LENGTH).AsDouble();
+                        if (tempLength > length)
+                            length = tempLength;
                     }
+
+                    //сортирую марки и записываю через запятую
                     List<string> marksList = marks.ToList();
                     marksList.Sort();
                     for (int i = 0; i < marks.Count; i++)
@@ -125,10 +135,9 @@ namespace AreaRebarMark
                         rebarSystemMark += marksList[i];
                         if (i < marks.Count - 1) rebarSystemMark += ", ";
                     }
-
-
                     rebarAreaPath.get_Parameter(BuiltInParameter.ALL_MODEL_MARK).Set(rebarSystemMark);
 
+                    //записываю длину арматуры а зону
                     Parameter lengthParam = rebarAreaPath.LookupParameter("Рзм.Длина");
                     if(lengthParam != null)
                     {
