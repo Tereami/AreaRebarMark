@@ -11,15 +11,12 @@
 //Zuev Aleksandr, 2019, all rigths reserved.
 #endregion
 #region Usings
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Autodesk.Revit.DB; //для работы с элементами модели Revit
+using System.Diagnostics;
+using Autodesk.Revit.DB;
 using Autodesk.Revit.DB.Structure;
-using Autodesk.Revit.UI; //для работы с элементами интерфейса
-using Autodesk.Revit.UI.Selection; //работы с выделенными элементами
+using Autodesk.Revit.UI;
 #endregion
 
 namespace AreaRebarMark
@@ -29,6 +26,9 @@ namespace AreaRebarMark
     {
         public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
         {
+            Debug.Listeners.Clear();
+            Debug.Listeners.Add(new RbsLogger.Logger("AreeRebarMark"));
+            Debug.WriteLine("Start area rebar mark");
             double offset = 0; //мм
 
             //собираю все элементы армирования по площади и траектории
@@ -150,6 +150,7 @@ namespace AreaRebarMark
             }
 
             BalloonTip.Show("Успешно!", "Обработано зон: " + count.ToString());
+            Debug.WriteLine("Success, elements: " + count.ToString());
 
             return Result.Succeeded;
         }

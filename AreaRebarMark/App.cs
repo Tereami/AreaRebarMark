@@ -40,8 +40,6 @@ namespace AreaRebarMark
                 assemblyPath,
                 "AreaRebarMark.CommandManualStart")
                 ) as PushButton;
-            btn.LargeImage = this.PngImageSource("AreaRebarMark.Resources.markLarge.png");
-            btn.Image = this.PngImageSource("AreaRebarMark.Resources.markLarge.png");
             btn.ToolTip = "Указание позиции арматурного стержня в зону армирования. При наличии нескольких стержней записывает позиции через запятую.";
 
             return Result.Succeeded;
@@ -52,14 +50,6 @@ namespace AreaRebarMark
             return Result.Succeeded;
         }
 
-
-        //метод позволяет получить картинку не из отдельного файла, а из внедренного ресурса
-        private System.Windows.Media.ImageSource PngImageSource(string embeddedPathname)
-        {
-            System.IO.Stream st = this.GetType().Assembly.GetManifestResourceStream(embeddedPathname);
-            PngBitmapDecoder decoder = new PngBitmapDecoder(st, BitmapCreateOptions.PreservePixelFormat, BitmapCacheOption.Default);
-            return decoder.Frames[0];
-        }
 
     }
 }
