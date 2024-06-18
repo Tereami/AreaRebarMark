@@ -26,9 +26,9 @@ namespace AreaRebarMark
     {
         public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
         {
-            Debug.Listeners.Clear();
-            Debug.Listeners.Add(new RbsLogger.Logger("AreeRebarMark"));
-            Debug.WriteLine("Start area rebar mark");
+            Trace.Listeners.Clear();
+            Trace.Listeners.Add(new RbsLogger.Logger("AreeRebarMark"));
+            Trace.WriteLine("Start area rebar mark");
             double offset = 0; //мм
 
             //собираю все элементы армирования по площади и траектории
@@ -150,7 +150,7 @@ namespace AreaRebarMark
             }
 
             BalloonTip.Show("Успешно!", "Обработано зон: " + count.ToString());
-            Debug.WriteLine("Success, elements: " + count.ToString());
+            Trace.WriteLine("Success, elements: " + count.ToString());
 
             return Result.Succeeded;
         }
